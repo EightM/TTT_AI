@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 public class Game {
     private final Board board = new Board();
 
-    public void nextTurn() {
+    public void nextHumanTurn() {
         var scanner = new Scanner(System.in);
 
         var success = false;
@@ -23,20 +23,28 @@ public class Game {
             success = board.putMarkOnTheBoard(input.get(0), input.get(1));
         }
         board.printBoard();
-        printGameStatus();
     }
 
-    public void fillBoardByString() {
-        System.out.println("Enter the cells:");
-        var scanner = new Scanner(System.in);
-        var initialData = scanner.nextLine();
-        board.fillBoardByString(initialData);
+    public void startGame() {
         board.printBoard();
+        var isHumanTurn = true;
+
+        while (!isGameFinished()) {
+            if (isHumanTurn) {
+                nextHumanTurn();
+                isHumanTurn = false;
+                continue;
+            }
+
+            nextAiTurn();
+            isHumanTurn = true;
+        }
+        printGameStatus();
     }
 
     private void printGameStatus() {
         var lastMark = board.currentPlayerMark().equals("O") ? "X" : "O";
-        if (isGameFinished(lastMark)) {
+        if (isGameFinished()) {
             System.out.println(lastMark + " wins");
         } else if (isBoardFull()) {
             System.out.println("Draw");
@@ -59,11 +67,23 @@ public class Game {
         return input.stream().map(Integer::parseInt).collect(Collectors.toList());
     }
 
-    private boolean isGameFinished(String lastMark) {
+    private boolean isGameFinished() {
+        var lastMark = board.currentPlayerMark().equals("O") ? "X" : "O";
         return board.isFinished(lastMark);
     }
 
     private boolean isBoardFull() {
         return board.isBoardFull();
+    }
+
+    private void nextAiTurn() {
+        System.out.println("Making move level \"easy\"");
+        var randomFreeCell = board.getRandomFreeCell();
+        if (randomFreeCell.isEmpty()) {
+            return;
+        }
+
+        board.putMarkOnTheBoard(randomFreeCell.get().getKey() + 1, randomFreeCell.get().getValue() + 1);
+        board.printBoard();
     }
 }

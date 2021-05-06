@@ -1,22 +1,21 @@
 package tictactoe;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Board {
     private final String[][] gameBoard = new String[3][3];
 
-    public void fillBoardByString(String initialData) {
-        if (initialData.length() != 9) {
-            throw new IllegalArgumentException();
-        }
-        var shift = 0;
+    public Board() {
         for (var i = 0; i < gameBoard.length; i++) {
             for (var j = 0; j < gameBoard.length; j++) {
-                var mark = getNextMarkFromData(initialData, shift);
-                gameBoard[i][j] = mark;
-                shift++;
+                gameBoard[i][j] = " ";
             }
         }
     }
@@ -28,15 +27,6 @@ public class Board {
             System.out.println(row);
         }
         System.out.println("---------");
-    }
-
-    private String getNextMarkFromData(String initialData, int shift) {
-        var symbol = String.valueOf(initialData.charAt(shift));
-        if (symbol.equals("_")) {
-            return " ";
-        }
-
-        return symbol;
     }
 
     public String currentPlayerMark() {
@@ -87,6 +77,26 @@ public class Board {
         return checkDiagonalsForWin(lastMark);
     }
 
+    public boolean isBoardFull() {
+        return Arrays.stream(gameBoard)
+                .flatMap(Arrays::stream)
+                .filter(String::isBlank)
+                .findAny().isEmpty();
+    }
+
+    public List<Map.Entry<Integer, Integer>> getFreeCells() {
+        List<Map.Entry<Integer, Integer>> freeCells = new ArrayList<>();
+        for (var i = 0; i < gameBoard.length; i++) {
+            for (var j = 0; j < gameBoard.length; j++) {
+                if (gameBoard[i][j].isBlank()) {
+                    freeCells.add(Map.entry(i, j));
+                }
+            }
+        }
+
+        return freeCells;
+    }
+
     private boolean checkDiagonalsForWin(String lastMark) {
         var mainDiagonalScore = 0;
         var subDiagonalScore = 0;
@@ -133,10 +143,15 @@ public class Board {
         return false;
     }
 
-    public boolean isBoardFull() {
-        return Arrays.stream(gameBoard)
-                .flatMap(Arrays::stream)
-                .filter(String::isBlank)
-                .findAny().isEmpty();
+    public Optional<Map.Entry<Integer, Integer>> getRandomFreeCell() {
+        var freeCells = getFreeCells();
+        Collections.shuffle(freeCells);
+        var iterator = freeCells.iterator();
+
+        if (iterator.hasNext()) {
+            return Optional.of(iterator.next());
+        }
+
+        return Optional.empty();
     }
 }
