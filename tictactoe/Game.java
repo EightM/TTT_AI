@@ -3,7 +3,10 @@ package tictactoe;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Game {
@@ -26,20 +29,70 @@ public class Game {
     }
 
     public void startGame() {
+        var gameSettings = getGameSettings();
+
+        if (gameSettings.isEmpty()) {
+            return;
+        }
+
+        var firstPlayer = new Player(gameSettings.get().getKey());
+        var secondPlayer = new Player(gameSettings.get().getValue());
         board.printBoard();
-        var isHumanTurn = true;
+        var isFirstPlayerTurn = true;
 
         while (!isGameFinished()) {
-            if (isHumanTurn) {
-                nextHumanTurn();
-                isHumanTurn = false;
+            if (isFirstPlayerTurn) {
+                nextTurn(firstPlayer);
+                isFirstPlayerTurn = false;
                 continue;
             }
 
-            nextAiTurn();
-            isHumanTurn = true;
+            nextTurn(secondPlayer);
+            isFirstPlayerTurn = true;
         }
         printGameStatus();
+    }
+
+    private void nextTurn(Player player) {
+        if (player.isHuman()) {
+            nextHumanTurn();
+        } else {
+            nextAiTurn();
+        }
+    }
+
+    private Optional<Map.Entry<String, String>> getGameSettings() {
+        var scanner = new Scanner(System.in);
+        System.out.println("Input command:");
+        var input = scanner.nextLine();
+
+        while (true) {
+            if (input.equals("exit")) {
+                return Optional.empty();
+            }
+
+            if (input.startsWith("start")) {
+                var userArgs = handleStartArgument(input);
+                if (userArgs.isPresent()) {
+                    return userArgs;
+                }
+            }
+
+            System.out.println("Bad parameters!");
+            input = scanner.nextLine();
+        }
+    }
+
+    private Optional<Map.Entry<String, String>> handleStartArgument(String input) {
+        var args = Arrays.stream(input.split("\\s+"))
+                .filter(Predicate.isEqual("user").or(Predicate.isEqual("easy")))
+                .collect(Collectors.toList());
+
+        if (args.size() != 2) {
+            return Optional.empty();
+        }
+
+        return Optional.of(Map.entry(args.get(0), args.get(1)));
     }
 
     private void printGameStatus() {
