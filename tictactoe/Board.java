@@ -20,6 +20,21 @@ public class Board {
         }
     }
 
+    public Board(String[][] data) {
+        for (var i = 0; i < gameBoard.length; i++) {
+            System.arraycopy(data[i], 0, gameBoard[i], 0, gameBoard.length);
+        }
+    }
+
+    public Board getBoardCopy() {
+        var copyBoard = new String[gameBoard.length][gameBoard.length];
+        for (var i = 0; i < copyBoard.length; i++) {
+            copyBoard[i] = Arrays.copyOf(gameBoard[i], gameBoard.length);
+        }
+
+        return new Board(copyBoard);
+    }
+
     public void printBoard() {
         System.out.println("---------");
         for (String[] strings : gameBoard) {
@@ -42,39 +57,37 @@ public class Board {
         return "O";
     }
 
-    public boolean putMarkOnTheBoard(int x, int y) {
-        if (x < 1 || x > 3 || y < 1 || y > 3) {
+    public boolean putMarkOnTheBoard(String mark, int x, int y) {
+
+        var realX = x - 1;
+        var realY = y - 1;
+
+        if (realX < 0 || realX > 2 || realY < 0 || realY > 2) {
             System.out.println("Coordinates should be from 1 to 3!");
             return false;
         }
-
-        // Массив индексируется с 0 до 2
-        // Формат ввода человеком является обратным тому, как данные хранятся в массиве
-        var realX = x - 1;
-        var realY = y - 1;
 
         if (!gameBoard[realX][realY].isBlank()) {
             System.out.println("This cell is occupied! Choose another one!");
             return false;
         }
 
-        gameBoard[realX][realY] = currentPlayerMark();
+        gameBoard[realX][realY] = mark;
 
         return true;
     }
 
-    public boolean isFinished(String lastMark) {
+    public String isFinished(String lastMark) {
         // check rows
-        if (checkBoardRowsForWin(lastMark)) {
-            return true;
+        if (checkBoardRowsForWin(lastMark) || checkColumnsForWin(lastMark) || checkDiagonalsForWin(lastMark)) {
+            return lastMark + " wins";
         }
 
-        // check columns
-        if (checkColumnsForWin(lastMark)) {
-            return true;
+        if (isBoardFull()) {
+            return "Draw";
         }
 
-        return checkDiagonalsForWin(lastMark);
+        return "";
     }
 
     public boolean isBoardFull() {
@@ -82,6 +95,10 @@ public class Board {
                 .flatMap(Arrays::stream)
                 .filter(String::isBlank)
                 .findAny().isEmpty();
+    }
+
+    public String lastPlayerMark() {
+        return currentPlayerMark().equals("O") ? "X" : "O";
     }
 
     public List<Map.Entry<Integer, Integer>> getFreeCells() {
