@@ -22,8 +22,8 @@ public class Game {
             return;
         }
 
-        var firstPlayer = createPlayer(gameSettings.get().getKey());
-        var secondPlayer = createPlayer(gameSettings.get().getValue());
+        var firstPlayer = createPlayer(gameSettings.get().getKey(), "X");
+        var secondPlayer = createPlayer(gameSettings.get().getValue(), "O");
         board.printBoard();
         var isFirstPlayerTurn = true;
 
@@ -48,10 +48,10 @@ public class Game {
         return board.isFinished(lastMark);
     }
 
-    private Player createPlayer(String userType) {
+    private Player createPlayer(String userType, String mark) {
         var aiTypes = Set.of("easy", "medium", "hard");
         if (aiTypes.contains(userType)) {
-            return new AiPlayer(userType);
+            return new AiPlayer(userType, mark);
         }
 
         return new HumanPlayer();
@@ -81,7 +81,11 @@ public class Game {
 
     private Optional<Map.Entry<String, String>> handleStartArgument(String input) {
         var args = Arrays.stream(input.split("\\s+"))
-                .filter(Predicate.isEqual("user").or(Predicate.isEqual("easy").or(Predicate.isEqual("medium"))))
+                .filter(Predicate.isEqual("user")
+                        .or(Predicate.isEqual("easy"))
+                        .or(Predicate.isEqual("medium"))
+                        .or(Predicate.isEqual("hard")))
+
                 .collect(Collectors.toList());
 
         if (args.size() != 2) {
